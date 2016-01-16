@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Baccano</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style>
+        .chatbox{
+            background-color: #EFEFEF;
+            margin-bottom: 1px;
+            padding: 5px;
+            opacity: 0.8;
+        }
+        .username-in-chatbox{
+            display: inline-block;
+            margin-right:30px;
+        }
+        .logout{
+            margin: 5px;
+        }
+        .chatDiv{
+            height: 600px;
+            overflow: scroll;
+        }
+    </style>
+</head>
+<body background="/img/chat-backgroud.jpg" style="background-size: cover">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="col-md-6">
+                    <h4>Hello <span id="username"><%= session.username %></span>!</h4>
+                </div>
+                <div class="col-md-2 logout">
+                    <form action="/logout">
+                        <button type="submit" class="logout">Logout</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+        <div class="row ">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="col-md-6 chatDiv" id="chatArea">
+                    <% for(var i=0;i<messages.length;i++) { %>
+                    <div class="chatbox">
+                        <h4 class="username-in-chatbox"><%= messages[i].username %></h4>
+                        <small><%= messages[i].time %></small>
+                        <p><%= messages[i].content %></p>
+                    </div>
+                    <% } %>
+                </div>
+                <div class="col-md-2">
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <form id="chatMsg">
+                    <input id="m" autocomplete="off" type="text"/>
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+        <ul id="messages"></ul>
+    </div>
+    <script src="/js/socket.io.js"></script>
+    <script>
+        function scrollDown(){
+            window.scrollTo(0,$('chatArea').scrollHeight);
+        }
+        window.onload = scrollDown;
+        var socket = io();
+        $('#chatMsg').submit(function(){
+            if ($('#m').val() == '')return false;
+            else {
+                var post = {
+                    'username': $('#username').text(),
+                    'time': new Date().toString(),
+                    'content': $('#m').val()
+                }
+                socket.emit('chat message', post);
+                $('#m').val('');
+                window.scrollTo(0,$('chatArea').scrollHeight);
+                return false;
+            }
+        });
+        socket.on('chat message', function(post){
+            var $chatArea = $('#chatArea');
+            var $newBox = $('<div class="chatbox">');
+            $newBox.append('<h4 class="username-in-chatbox">' + post.username + '</h4>');
+            $newBox.append('<small>' + post.time + '</small>');
+            $newBox.append('<p>' + post.content + '</p>');
+            $chatArea.append($newBox);
+        });
+    </script>
+</body>
+<html>
