@@ -9,7 +9,6 @@ router.use(function(req, res, next) {
 
 router.get('/', function(req, res) {
 	if(req.session.username!=null) {
-		var msgs = [];
 		MongoClient.connect(url, function(err, db) {
 			if(err){
 				console.log('Failed to connect to MongoDB!');
@@ -18,15 +17,21 @@ router.get('/', function(req, res) {
 			else{
 				console.log('Connect to MongoDB successfully!');
 				var collection = db.collection('messages');
-				msgs = collection.find().toArray();
-				console.log('In Database: '+msgs);
+				collection.find().toArray(function(err, results) {
+					console.log('There are '+results.length+' messages in database.');
+					for(var i=0;i<results.length;i++){
+						console.log(results[i].username);
+						console.log(results[i].time);
+						console.log(results[i].content);
+					}
+					res.render('chatroom', {
+						layout: false,
+						session: req.session,
+						messages: results
+					});
+					db.close();
+				});
 			}
-		});
-		console.log('In real world: '+msgs);
-		res.render('chatroom', {
-			layout: false,
-			session: req.session,
-			messages: msgs
 		});
 	}
 	else {
